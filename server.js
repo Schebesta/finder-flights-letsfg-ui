@@ -1,5 +1,4 @@
 import express from 'express';
-import { LetsFG } from 'letsfg';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,13 +8,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
-// Serve the frontend UI
 app.use(express.static(__dirname));
 
-// Initialize the LetsFG SDK
-// This automatically picks up the Twitter/X auth token (from letsfg auth)
-// or a LETSFG_API_KEY if using the Developer API.
-const letsfg = new LetsFG();
+const API_KEY = process.env.LETSFG_API_KEY || 'letsfg_E66D9N9HAlvPZ6Da5zO0PKPaECmhh8RHMxVPp6VmJfo';
 
 app.get('/api/search', async (req, res) => {
     try {
@@ -25,12 +20,29 @@ app.get('/api/search', async (req, res) => {
             return res.status(400).json({ error: "Missing origin, destination, or date parameters." });
         }
         
-        console.log(`[LetsFG API] Searching flights: ${origin} → ${destination} on ${date}`);
+        console.log(`[LetsFG Sandbox API] Searching flights: ${origin} → ${destination} on ${date}`);
         
-        // Call the LetsFG SDK to perform the search
-        const flights = await letsfg.search(origin, destination, date);
+        // Directly call the free sandbox endpoint so it works instantly without needing account funding
+        const response = await fetch("https://letsfg.co/developers/api/v1/sandbox/flights/search", {
+            method: "POST",
+            headers: {
+                "X-API-Key": API_KEY,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                origin,
+                destination,
+                date_from: date
+            })
+        });
+
+        const data = await response.json();
         
-        res.json(flights);
+        if (!response.ok) {
+            throw new Error(data.error || `API error (${response.status})`);
+        }
+        
+        res.json(data);
     } catch (error) {
         console.error("[LetsFG API] Error:", error);
         res.status(500).json({ error: error.message || "An error occurred during flight search." });
@@ -39,6 +51,6 @@ app.get('/api/search', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`✈️  Finder Flights (LetsFG) backend running on http://localhost:${PORT}`);
-    console.log(`Note: If you haven't authenticated yet, run 'npx letsfg auth' in your terminal first to get your free token.`);
+    console.log(`✈️  Finder Flights (LetsFG Sandbox) backend running on http://localhost:${PORT}`);
+    console.log(`Ready to search! Test it in your browser.`);
 });
