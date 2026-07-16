@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finder Flights (Powered by LetsFG)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --finder-blue: #0052FF;
+            --finder-dark: #1F2329;
+            --finder-gray: #6A7381;
+            --finder-light-gray: #F4F5F7;
+            --finder-white: #FFFFFF;
+            --finder-green: #00A651;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--finder-light-gray);
+            color: var(--finder-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 48px;
+            background-color: var(--finder-white);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 24px;
+            color: var(--finder-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-mark {
+            background-color: var(--finder-blue);
+            color: white;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 20px;
+        }
+
+        .nav-links { display: flex; gap: 32px; }
+        .nav-links a { text-decoration: none; color: var(--finder-dark); font-weight: 600; font-size: 15px; }
+
+        /* Hero */
+        .hero {
+            background-color: var(--finder-blue);
+            color: white;
+            padding: 60px 24px 100px;
+            text-align: center;
+        }
+
+        .hero h1 { font-size: 56px; font-weight: 800; margin: 0 0 16px 0; letter-spacing: -0.03em; }
+        .hero p { font-size: 20px; font-weight: 500; opacity: 0.9; margin: 0; }
+        
+        .badge {
+            background-color: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            display: inline-block;
+        }
+
+        /* Search Widget */
+        .search-widget {
+            background: white;
+            max-width: 900px;
+            margin: -60px auto 40px;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.06);
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .input-group { flex: 1; text-align: left; }
+        .input-group label { display: block; font-size: 13px; font-weight: 700; color: var(--finder-gray); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group input { 
+            width: 100%; 
+            padding: 16px; 
+            border: 2px solid #E5E7EB; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-family: inherit;
+            font-weight: 500;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus { border-color: var(--finder-blue); }
+
+        .btn {
+            background-color: var(--finder-blue);
+            color: white;
+            border: none;
+            padding: 18px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            height: 55px;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .btn:hover { background-color: #0043D6; transform: translateY(-2px); }
+
+        /* Results */
+        .results-container { max-width: 900px; margin: 0 auto 80px; }
+        
+        .flight-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            border: 1px solid #E5E7EB;
+        }
+
+        .flight-info { display: flex; align-items: center; gap: 32px; }
+        .airline { font-weight: 700; font-size: 18px; width: 140px; }
+        .times { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        .route { color: var(--finder-gray); font-size: 14px; font-weight: 500; margin-top: 4px; }
+        .duration { font-size: 14px; color: var(--finder-gray); font-weight: 500; }
+        
+        .price-section { text-align: right; }
+        .price { font-size: 28px; font-weight: 800; color: var(--finder-dark); letter-spacing: -1px;}
+        .price-label { font-size: 12px; color: var(--finder-green); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--finder-blue);
+            border: 2px solid var(--finder-blue);
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+        .btn-outline:hover { background: rgba(0,82,255,0.05); }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#" class="logo">
+            <div class="logo-mark">F</div>
+            Finder Flights
+        </a>
+        <div class="nav-links">
+            <a href="#">Credit Cards</a>
+            <a href="#">Loans</a>
+            <a href="#">Travel Insurance</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="badge">Powered by LetsFG Engine</div>
+        <h1>Agent-native flight search.</h1>
+        <p>Zero markup. Real prices. Checking 180+ airlines directly.</p>
+    </div>
+
+    <div class="search-widget">
+        <div class="input-group">
+            <label>From</label>
+            <input type="text" value="Sydney (SYD)" readonly>
+        </div>
+        <div class="input-group">
+            <label>To</label>
+            <input type="text" value="London (LHR)" readonly>
+        </div>
+        <div class="input-group">
+            <label>Depart</label>
+            <input type="date" value="2026-08-15" readonly>
+        </div>
+        <button class="btn">Search Flights</button>
+    </div>
+
+    <div class="results-container">
+        
+        <div class="flight-card">
+            <div class="flight-info">
+                <div class="airline">Qantas</div>
+                <div>
+                    <div class="times">14:55 — 06:20+1</div>
+                    <div class="route">SYD → LHR (1 stop)</div>
+                </div>
+                <div class="duration">24h 25m</div>
+            </div>
+            <div class="price-section">
+                <div class="price-label">Zero Markup</div>
+                <div class="price">$1,450</div>
+                <button class="btn-outline">Select</button>
+            </div>
+        </div>
+
+        <div class="flight-card">
+            <div class="flight-info">
+                <div class="airline">Singapore Airlines</div>
+                <div>
+                    <div class="times">16:10 — 05:55+1</div>
+                    <div class="route">SYD → LHR (1 stop)</div>
+                </div>
+                <div class="duration">22h 45m</div>
+            </div>
+            <div class="price-section">
+                <div class="price-label">Zero Markup</div>
+                <div class="price">$1,489</div>
+                <button class="btn-outline">Select</button>
+            </div>
+        </div>
+
+        <div class="flight-card">
+            <div class="flight-info">
+                <div class="airline">Scoot + Ryanair</div>
+                <div>
+                    <div class="times">12:30 — 14:15+1</div>
+                    <div class="route">SYD → STN (2 stops)</div>
+                </div>
+                <div class="duration">34h 45m</div>
+            </div>
+            <div class="price-section">
+                <div class="price-label">Virtual Interline</div>
+                <div class="price">$895</div>
+                <button class="btn-outline">Select</button>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
