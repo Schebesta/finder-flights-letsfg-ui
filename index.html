@@ -190,70 +190,99 @@
     <div class="search-widget">
         <div class="input-group">
             <label>From</label>
-            <input type="text" value="Sydney (SYD)" readonly>
+            <input type="text" id="origin" value="SYD">
         </div>
         <div class="input-group">
             <label>To</label>
-            <input type="text" value="London (LHR)" readonly>
+            <input type="text" id="dest" value="LHR">
         </div>
         <div class="input-group">
             <label>Depart</label>
-            <input type="date" value="2026-08-15" readonly>
+            <input type="date" id="date" value="2026-08-15">
         </div>
-        <button class="btn">Search Flights</button>
+        <button class="btn" id="searchBtn">Search Flights</button>
     </div>
 
-    <div class="results-container">
-        
-        <div class="flight-card">
-            <div class="flight-info">
-                <div class="airline">Qantas</div>
-                <div>
-                    <div class="times">14:55 — 06:20+1</div>
-                    <div class="route">SYD → LHR (1 stop)</div>
-                </div>
-                <div class="duration">24h 25m</div>
-            </div>
-            <div class="price-section">
-                <div class="price-label">Zero Markup</div>
-                <div class="price">$1,450</div>
-                <button class="btn-outline">Select</button>
-            </div>
-        </div>
-
-        <div class="flight-card">
-            <div class="flight-info">
-                <div class="airline">Singapore Airlines</div>
-                <div>
-                    <div class="times">16:10 — 05:55+1</div>
-                    <div class="route">SYD → LHR (1 stop)</div>
-                </div>
-                <div class="duration">22h 45m</div>
-            </div>
-            <div class="price-section">
-                <div class="price-label">Zero Markup</div>
-                <div class="price">$1,489</div>
-                <button class="btn-outline">Select</button>
-            </div>
-        </div>
-
-        <div class="flight-card">
-            <div class="flight-info">
-                <div class="airline">Scoot + Ryanair</div>
-                <div>
-                    <div class="times">12:30 — 14:15+1</div>
-                    <div class="route">SYD → STN (2 stops)</div>
-                </div>
-                <div class="duration">34h 45m</div>
-            </div>
-            <div class="price-section">
-                <div class="price-label">Virtual Interline</div>
-                <div class="price">$895</div>
-                <button class="btn-outline">Select</button>
-            </div>
-        </div>
-
+    <div class="results-container" id="results">
+        <p style="text-align: center; color: #6A7381; font-weight: 500;">
+            Enter your route above to start searching. (Make sure you are running the Node backend locally!)
+        </p>
     </div>
 
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('searchBtn');
+            const origin = document.getElementById('origin').value.trim();
+            const dest = document.getElementById('dest').value.trim();
+            const date = document.getElementById('date').value;
+            const resultsContainer = document.getElementById('results');
+            
+            if (!origin || !dest || !date) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            btn.textContent = 'Searching 180+ airlines...';
+            btn.style.opacity = '0.7';
+            resultsContainer.innerHTML = '<p style="text-align: center; font-weight: 600;">Querying LetsFG network... this can take 60-90 seconds as it pulls live prices directly from airlines.</p>';
+            
+            try {
+                // We extract just the 3-letter code if the user inputs something like "Sydney (SYD)"
+                const oCode = origin.includes('(') ? origin.split('(')[1].replace(')','') : origin;
+                const dCode = dest.includes('(') ? dest.split('(')[1].replace(')','') : dest;
+
+                const response = await fetch(`/api/search?origin=${oCode}&destination=${dCode}&date=${date}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultsContainer.innerHTML = `<p style="color: red; text-align: center;">Error: ${data.error}</p>`;
+                    btn.textContent = 'Search Flights';
+                    btn.style.opacity = '1';
+                    return;
+                }
+                
+                resultsContainer.innerHTML = '';
+                
+                if (!data.offers || data.offers.length === 0) {
+                    resultsContainer.innerHTML = '<p style="text-align: center; font-weight: 500;">No flights found for this route on this date.</p>';
+                } else {
+                    data.offers.slice(0, 10).forEach(offer => {
+                        const segments = offer.outbound?.segments || [];
+                        if (segments.length === 0) return;
+                        
+                        const firstSegment = segments[0];
+                        const lastSegment = segments[segments.length - 1];
+                        
+                        // Fallbacks if data shapes are slightly different
+                        const airline = offer.airlines ? offer.airlines.join(', ') : (offer.owner_airline || "Unknown Airline");
+                        const depTime = firstSegment.departure_time || firstSegment.departure || "TBD";
+                        const arrTime = lastSegment.arrival_time || lastSegment.arrival || "TBD";
+                        const isVirtualInterline = (offer.airlines && offer.airlines.length > 1) ? 'Virtual Interline' : 'Zero Markup';
+                        
+                        const html = `
+                        <div class="flight-card">
+                            <div class="flight-info">
+                                <div class="airline">${airline}</div>
+                                <div>
+                                    <div class="times">${depTime} — ${arrTime}</div>
+                                    <div class="route">${firstSegment.origin} → ${lastSegment.destination} (${segments.length - 1} stops)</div>
+                                </div>
+                            </div>
+                            <div class="price-section">
+                                <div class="price-label">${isVirtualInterline}</div>
+                                <div class="price">${offer.currency || 'USD'} ${offer.price}</div>
+                                <button class="btn-outline">Select</button>
+                            </div>
+                        </div>`;
+                        resultsContainer.innerHTML += html;
+                    });
+                }
+            } catch (err) {
+                resultsContainer.innerHTML = `<p style="color: red; text-align: center;">Failed to connect to backend. Is the Node.js server running?</p>`;
+            }
+            btn.textContent = 'Search Flights';
+            btn.style.opacity = '1';
+        });
+    </script>
 </body>
 </html>
